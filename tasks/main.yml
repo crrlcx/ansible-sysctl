@@ -1,0 +1,29 @@
+---
+# tasks file for ansible-sysctl
+
+- name: sysctl | facts
+  setup: #aka gather_facts
+    gather_subset:
+      - hardware
+    filter: "ansible_*_mb"
+  tags:
+    - always
+
+- name: sysctl | combine
+  set_fact:
+    sysctl_vars_combine: "{{ sysctl_vars | combine(sysctl_vars_override) | dict2items(key_name='option', value_name='value') }}"
+  tags:
+    - always
+
+- name: sysctl | set sysctl.conf
+  template:
+    src: etc/sysctl.conf.j2
+    dest: /etc/sysctl.conf
+    backup: no
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - sysctl update
+  tags:
+    - always
